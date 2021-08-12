@@ -6,23 +6,7 @@ import StatusBar from "./StatusBar";
 import Loading from "./Loading";
 
 const address0 = "0x0000000000000000000000000000000000000000";
-const address1 = "0x0000000000000000000000000000000000000001";
 const lsGameKey = "tic-tac-toc-game";
-const lsAppKey = "tic-tac-toc-app";
-
-const loadAppStatus = () => {
-  const strLsStatusApp = window.localStorage.getItem(lsAppKey);
-
-  return strLsStatusApp?.length > 0
-    ? JSON.parse(strLsStatusApp)
-    : {
-        canMove: false,
-        won: false,
-        loose: false,
-        tie: false,
-        iCreateTheGame: false,
-      };
-};
 
 const loadGameStatus = () => {
   const strLsStatusGame = window.localStorage.getItem(lsGameKey);
@@ -31,18 +15,17 @@ const loadGameStatus = () => {
     ? JSON.parse(strLsStatusGame)
     : {
         squares: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-        status: null,
-        player1: null,
-        player2: null,
-        prize: 0,
-        nextMoveTo: null,
+        player1: address0,
+        player2: address0,
+        nextMovePlayer: address0,
+        winner: address0,
+        status: -1,
         gameId: -1,
       };
 };
 
 function App() {
   const [ticTacToeFacade, setTicTacToeFacade] = useState();
-  const [appStatus, setAppStatus] = useState(loadAppStatus());
   const [gameStatus, setGameStatus] = useState(loadGameStatus());
   const [loading, setLoading] = useState(false);
 
@@ -51,93 +34,52 @@ function App() {
     setGameStatus(updatedGame);
   };
 
+  const handleAccountChanged = (newAccount) => {
+    console.log("new account: ", newAccount);
+    updateGameStatus({
+      ...gameStatus,
+      yourAccount: newAccount,
+    });
+  };
+
   useEffect(() => {
     (async () => {
-      setTicTacToeFacade(
-        await TicTacToeFacade(
-          (updatedGame) => updateGameStatus(updatedGame),
-          (updatedGame) => updateGameStatus(updatedGame),
-          (updatedGame) => updateGameStatus(updatedGame)
-        )
+      const _ticTacToeFacade = await TicTacToeFacade(
+        (updatedGame) => updateGameStatus(updatedGame),
+        (updatedGame) => updateGameStatus(updatedGame),
+        (updatedGame) => updateGameStatus(updatedGame),
+        handleAccountChanged
       );
+
+      setTicTacToeFacade(_ticTacToeFacade);
+
+      const strLsStatusGame = window.localStorage.getItem(lsGameKey);
+
+      if (strLsStatusGame?.length > 0) {
+        const lsStatusGame = JSON.parse(strLsStatusGame);
+        setGameStatus({
+          ...lsStatusGame,
+          yourAccount: await _ticTacToeFacade.getCurrentAccount(),
+        });
+      }
     })();
-
-    const strLsStatusGame = window.localStorage.getItem(lsGameKey);
-    if (strLsStatusGame?.length > 0) {
-      const lsStatusGame = JSON.parse(strLsStatusGame);
-      setGameStatus(lsStatusGame);
-    }
-
-    const strLsStatusApp = window.localStorage.getItem(lsAppKey);
-    if (strLsStatusApp?.length > 0) {
-      const lsStatusApp = JSON.parse(strLsStatusApp);
-
-      setAppStatus(lsStatusApp);
-    }
   }, []);
 
-  const eqAddress = (addr1, addr2) =>
-    addr1 != address0 && addr1 !== address1 && addr1 === addr2;
-
-  useEffect(() => {
-    const updatedAppStatus = appStatus.iCreateTheGame
-      ? {
-          canMove: gameStatus.nextMoveTo === "1",
-          won:
-            gameStatus.gameId > 0 &&
-            eqAddress(gameStatus.player1, gameStatus.status),
-          loose:
-            gameStatus.gameId > 0 &&
-            eqAddress(gameStatus.player2, gameStatus.status),
-          tie: gameStatus.gameId > 0 && gameStatus.status === address1,
-          iCreateTheGame: true,
-        }
-      : {
-          canMove: gameStatus.nextMoveTo === "2",
-          won:
-            gameStatus.gameId > 0 &&
-            eqAddress(gameStatus.player2, gameStatus.status),
-          loose:
-            gameStatus.gameId > 0 &&
-            eqAddress(gameStatus.player1, gameStatus.status),
-          tie: gameStatus.gameId > 0 && gameStatus.status === address1,
-          iCreateTheGame: false,
-        };
-
-    setAppStatus(updatedAppStatus);
-    window.localStorage.setItem(lsAppKey, JSON.stringify(updatedAppStatus));
-  }, [gameStatus]);
-
-  const handleStartNewGame = async (prizeAmount) => {
+  const handleStartNewGame = async () => {
     console.log("ticTacToeFacade ", ticTacToeFacade);
 
     setLoading(true);
     try {
-      setAppStatus({
-        ...appStatus,
-        iCreateTheGame: true,
-      });
-      await ticTacToeFacade.startNewGame(prizeAmount);
-    } catch (err) {
-      setAppStatus({
-        ...appStatus,
-        iCreateTheGame: false,
-      });
-    }
+      await ticTacToeFacade.startNewGame();
+    } catch (err) {}
 
     setLoading(false);
   };
 
-  const handleJoinExistingGame = async (gameId, prizeAmount) => {
+  const handleJoinExistingGame = async (gameId) => {
     setLoading(true);
     try {
-      await ticTacToeFacade.joinGame(gameId, prizeAmount);
-      const updatedAppState = {
-        ...appStatus,
-        iCreateTheGame: false,
-      };
-      window.localStorage.setItem(lsAppKey, JSON.stringify(updatedAppState));
-      setAppStatus(updatedAppState);
+      await ticTacToeFacade.joinGame(gameId);
     } catch (err) {
       console.log(err);
     }
@@ -149,7 +91,6 @@ function App() {
     setLoading(true);
     try {
       await ticTacToeFacade.makeMove(parseInt(gameStatus.gameId), cellNumber);
-      window.localStorage.setItem(lsAppKey, JSON.stringify(appStatus));
     } catch (err) {
       console.log(err);
     }
@@ -157,20 +98,24 @@ function App() {
   };
 
   console.log("gameStatus ", gameStatus);
-  console.log("appStatus ", appStatus);
 
   return (
     <div className="app">
       <StatusBar
-        appStatus={appStatus}
         gameStatus={gameStatus}
         onStartNewGame={handleStartNewGame}
         onJoinExistingGame={handleJoinExistingGame}
       />
       {gameStatus.gameId > 0 && (
-        <Board squares={gameStatus.squares} handleClick={handleMoveMade} />
+        <Board gameStatus={gameStatus} handleClick={handleMoveMade} />
       )}
-      {loading && <Loading />}
+      {loading && (
+        <div className="waiting-overlay">
+          <div className="waiting-overlay-inner">
+            <Loading />{" "}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

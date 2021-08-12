@@ -1,122 +1,76 @@
 import React, { useState } from "react";
 
-export default ({
-  appStatus,
-  gameStatus,
-  onStartNewGame,
-  onJoinExistingGame,
-}) => {
+export default ({ gameStatus, onStartNewGame, onJoinExistingGame }) => {
+  const { winner, yourAccount, status, nextMovePlayer, gameId, player1 } =
+    gameStatus;
   const [joinGameId, setJoinGameId] = useState(null);
-  const [joinGamePrizeAmount, setJoinGamePrizeAmount] = useState(0.001);
-  const [newGamePrizeAmount, setNewGamePrizeAmount] = useState(0.001);
-  const [newGameSelected, setNewGameSelected] = useState(true);
 
-  const renderTabsHeader = () => (
-    <div className="actions-header">
-      <div
-        className={`actions-header-item ${newGameSelected ? "active" : ""}`}
-        onClick={() => setNewGameSelected(true)}
-      >
-        Start New Game
-      </div>
-      <div
-        className={`actions-header-item ${!newGameSelected ? "active" : ""}`}
-        onClick={() => setNewGameSelected(false)}
-      >
-        Join Existing Game
-      </div>
-    </div>
-  );
+  const won = winner?.toLowerCase() === yourAccount?.toLowerCase();
+  const loose =
+    status == 1 && winner?.toLowerCase() != yourAccount?.toLowerCase();
+  const tie = status == 2;
+  const canMove = yourAccount?.toLowerCase() === nextMovePlayer?.toLowerCase();
+  const playable = gameId > 0 && !won && !loose && !tie;
+  const iCreateTheGame = player1?.toLowerCase() === yourAccount?.toLowerCase();
 
-  const renderTabNewGame = () =>
-    newGameSelected && (
-      <div className="action">
-        <div className="action-text">
-          Enter the prize amount you want to set for the new game
-        </div>
-
-        <div className="action-container">
-          <input
-            value={newGamePrizeAmount}
-            className="game-button-input"
-            type="text"
-            onChange={(e) => setNewGamePrizeAmount(e.target.value)}
-            placeholder="prize in ETH"
-          />
-
-          <button onClick={() => onStartNewGame(newGamePrizeAmount)}>
-            Create New Game
-          </button>
-        </div>
-      </div>
-    );
-
-  const renderTabJoinGame = () =>
-    !newGameSelected && (
-      <div className="action">
-        <div className="action-text">
-          Enter the game id and the prize amount to enter the game
-        </div>
-        <div className="action-container">
-          <input
-            className="game-button-input"
-            type="text"
-            onChange={(e) => setJoinGameId(e.target.value)}
-            placeholder="game id"
-          />
-          <input
-            className="game-button-input"
-            value={joinGamePrizeAmount}
-            onChange={(e) => setJoinGamePrizeAmount(e.target.value)}
-            placeholder="prize in ETH"
-          />
-          <button
-            className="join-game-button"
-            onClick={() => onJoinExistingGame(joinGameId, joinGamePrizeAmount)}
-          >
-            Join a Game
-          </button>
-        </div>
-      </div>
-    );
-
-  const renderActions = () => (
-    <div className="game-actions">
-      {renderTabsHeader()}
-      {renderTabNewGame()}
-      {renderTabJoinGame()}
-    </div>
-  );
+  console.log("game");
 
   const renderMessage = (condition, message) =>
     condition && <div className="message message-colored">{message}</div>;
 
   return (
-    <>
+    <div className="status-bar">
       <h1 className="title">Tic Tac Toe</h1>
-      {renderActions()}
+
+      <div className="actions">
+        <div className="action">
+          <button className="button-new-game" onClick={() => onStartNewGame()}>
+            Create New Game
+          </button>
+        </div>
+
+        <div className="action">
+          <button
+            className="join-game-button"
+            onClick={() => onJoinExistingGame(joinGameId)}
+          >
+            Join a Game
+          </button>
+          <input
+            className="input-join-game"
+            value={joinGameId}
+            onChange={(e) => setJoinGameId(e.target.value)}
+            placeholder="Game Id"
+          />
+        </div>
+      </div>
+
       <div className="messages">
-        {appStatus.iCreateTheGame && gameStatus.gameId > 0 && (
+        {iCreateTheGame && playable && (
           <div className="message">
             <p>
-              The game you created has id{" "}
-              <span className="game-details">{gameStatus.gameId}</span> and
-              prize <span className="game-details">{newGamePrizeAmount}</span>
+              Game created! The ID is
+              <span className="game-details"> {gameId}</span>
             </p>
-            <p>Give this info to your opponent and let him join this game.</p>
+            <p>Give it to the other player so he can join the game.</p>
           </div>
         )}
-        {renderMessage(
-          appStatus.canMove &&
-            !appStatus.won &&
-            !appStatus.loose &&
-            !appStatus.tie,
-          "It's your turn, click on a square"
+        <div className="message">
+          {playable && canMove
+            ? "It's your turn"
+            : playable && !canMove
+            ? "Wait for your opponent's move"
+            : "Create a new game or insert a Game Id and join an existing game"}
+        </div>
+
+        {won && (
+          <div className="message message-colored"> *** YOU WIN *** </div>
         )}
-        {renderMessage(appStatus.won, "YOU WIN!!!")}
-        {renderMessage(appStatus.loose, "YOU LOOSE!!!")}
-        {renderMessage(appStatus.tie, "it's a tie... try again")}
+        {loose && <div className="message message-colored"> YOU LOOSE </div>}
+        {tie && (
+          <div className="message message-colored"> The game is a draw... </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };

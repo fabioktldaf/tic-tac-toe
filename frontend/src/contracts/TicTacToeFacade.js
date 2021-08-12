@@ -29,7 +29,9 @@ export const getWeb3 = () =>
 export default async (
   onGameCreatedCallback,
   onOpponentJoinedGameCallback,
-  onMoveMadeCallback
+  onMoveMadeCallback,
+  onAccountChanged,
+  onNetworkChanged
 ) => {
   const web3 = await getWeb3();
   const netId = await web3.eth.getChainId();
@@ -54,6 +56,7 @@ export default async (
       onGameCreatedCallback({
         ...updatedGame,
         gameId,
+        yourAccount: sender,
       });
     }
   });
@@ -61,13 +64,14 @@ export default async (
   contract.events.OpponentJoinedGame(options).on("data", async (event) => {
     console.log("OpponentJoinedGame ", event);
 
-    const { sender, gameId } = event.returnValues;
+    const { gameId } = event.returnValues;
     if (gameId == currentGameId) {
       const updatedGame = await getGame(gameId);
 
       onOpponentJoinedGameCallback({
         ...updatedGame,
         gameId,
+        yourAccount: await getCurrentAccount(),
       });
     }
   });
@@ -75,13 +79,14 @@ export default async (
   contract.events.MoveMade(options).on("data", async (event) => {
     console.log("MoveMade ", event);
 
-    const { sender, gameId } = event.returnValues;
+    const { gameId } = event.returnValues;
     if (gameId == currentGameId) {
       const updatedGame = await getGame(gameId);
 
       onMoveMadeCallback({
         ...updatedGame,
         gameId,
+        yourAccount: await getCurrentAccount(),
       });
     }
   });
@@ -91,10 +96,9 @@ export default async (
     return accounts[0];
   };
 
-  const startNewGame = async (prizeAmount) => {
+  const startNewGame = async () => {
     await contract.methods.startNewGame().send({
       from: await getCurrentAccount(),
-      value: web3.utils.toWei(prizeAmount.toString(), "ether"),
       gasPrice: "1000000000",
     });
   };
@@ -104,11 +108,10 @@ export default async (
     return await contract.methods.getGame(gameId).call();
   };
 
-  const joinGame = async (gameId, prizeAmount) => {
+  const joinGame = async (gameId) => {
     currentGameId = gameId;
     await contract.methods.joinGame(parseInt(gameId)).send({
       from: await getCurrentAccount(),
-      value: web3.utils.toWei(prizeAmount.toString(), "ether"),
       gasPrice: "1000000000",
     });
   };
@@ -121,10 +124,21 @@ export default async (
     });
   };
 
+  window.ethereum.on(
+    "accountsChanged",
+    (accounts) => onAccountChanged && onAccountChanged(accounts[0])
+  );
+
+  window.ethereum.on(
+    "networkChanged",
+    (networkId) => onNetworkChanged && onNetworkChanged(networkId)
+  );
+
   return {
     startNewGame,
     joinGame,
     makeMove,
     getGame,
+    getCurrentAccount,
   };
 };

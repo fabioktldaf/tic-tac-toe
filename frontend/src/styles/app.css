@@ -7,7 +7,7 @@
 
 #root {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   background: black;
   width: 100vw;
@@ -22,14 +22,19 @@
   width: 30em;
 }
 
+.status-bar {
+  margin-bottom: 1em;
+  font-family: "Pacifico";
+  box-shadow: 0 0 4px orange;
+  border-radius: 1em;
+  margin-top: 2em;
+}
+
 .title {
   color: orange;
-  margin-bottom: 1em;
   text-align: center;
-  font-family: "Pacifico";
   font-size: 4em;
-  box-shadow: 0 0 4px;
-  border-radius: 10em;
+  border-bottom: 1px dotted #6b4604;
 }
 
 .board {
@@ -37,6 +42,42 @@
   grid-template: repeat(3, 1fr) / repeat(3, 1fr);
   height: 30em;
   margin-bottom: 3em;
+  position: relative;
+}
+
+.board-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+}
+
+.waiting-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+  top: 0;
+  left: 0;
+}
+
+.waiting-overlay-inner {
+  position: absolute;
+  width: 80%;
+  height: 80%;
+  margin: 10%;
+}
+
+.loading {
+  width: 80%;
+  height: 80%;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 10%;
+  left: 10%;
+  opacity: 0.5;
 }
 
 .square {
@@ -106,26 +147,23 @@
   border-bottom-right-radius: 20px;
 }
 
-.game-actions {
-  color: orange;
-  box-shadow: 0 0 4px;
-  border-radius: 10em;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-evenly;
-  overflow: hidden;
-}
-
-.action-container {
-  margin: 0 0 1em 0;
+.actions {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
+  border-bottom: 1px dotted #6b4604;
+  padding: 1em 0;
 }
 
-.game-actions button {
+.action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-new-game,
+.join-game-button {
   background-color: #ffa500;
   color: white;
   border-radius: 5px;
@@ -133,10 +171,11 @@
   cursor: pointer;
 }
 
-.game-button-input {
+.input-join-game {
   padding: 0.2em 1em;
-  width: 6em;
+  width: 4em;
   box-shadow: inset 0 0 5px;
+  margin-left: 0.5em;
 }
 
 .messages {
@@ -151,15 +190,29 @@
 .message {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 2em 0;
+  margin: 1em 0;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  margin: 1em 0;
 }
 
 .message-colored {
-  background-color: orange;
-  padding: 1em;
-  border-radius: 10em;
+  color: orange;
+  font-size: 1.6em;
+  letter-spacing: 2px;
+}
+
+.message p {
+  padding: 0 2em;
+  margin-bottom: 1em;
+}
+overlay .message-colored {
+  color: orange;
+  font-size: 1.6em;
+  letter-spacing: 2px;
 }
 
 .gameId {
@@ -168,54 +221,7 @@
   margin-left: 1em;
 }
 
-.action {
-  display: flex;
-  flex-direction: column;
-}
-.actions-header {
-  display: flex;
-  width: 100%;
-}
-
-.actions-header-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #564320;
-  color: grey;
-  cursor: pointer;
-  padding: 0.4em;
-}
-
-.actions-header-item.active {
-  background-color: orange;
-  color: white;
-}
-
-.action-text {
-  color: #ddd;
-  margin: 1em 0;
-}
-
 .game-details {
   font-size: 1.4em;
   font-weight: bold;
-}
-
-.loading-container {
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  top: 0;
-  left: 0;
-  background-color: #000;
-  opacity: 0.5;
-}
-
-.loading-content {
-  width: 20%;
 }

@@ -2,7 +2,6 @@
   "name": "tic-tac-toe",
   "version": "0.1.0",
   "private": true,
-  "homepage":"http://fabioktldaf.github.io/tic-tac-toe",
   "dependencies": {
     "@polyjuice-provider/base": "0.0.1-rc6",
     "@polyjuice-provider/web3": "0.0.1-rc6",
@@ -32,17 +31,15 @@
   },
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+      "last 5 chrome version",
+      "last 5 firefox version",
+      "last 5 safari version"
     ],
     "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
+      "last 5 chrome version",
+      "last 5 firefox version",
+      "last 5 safari version"
     ]
   },
-  "devDependencies": {
-    "gh-pages": "^3.2.3"
-  }
+  "devDependencies": {}
 }

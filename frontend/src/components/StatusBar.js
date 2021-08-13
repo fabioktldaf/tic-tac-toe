@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 
 export default ({ gameStatus, onStartNewGame, onJoinExistingGame }) => {
-  const { winner, yourAccount, status, nextMovePlayer, gameId, player1 } =
-    gameStatus;
+  const {
+    winner,
+    yourAccount,
+    status,
+    nextMovePlayer,
+    gameId,
+    player1,
+    player2,
+  } = gameStatus;
   const [joinGameId, setJoinGameId] = useState(null);
 
   const won = winner?.toLowerCase() === yourAccount?.toLowerCase();
@@ -46,15 +53,17 @@ export default ({ gameStatus, onStartNewGame, onJoinExistingGame }) => {
       </div>
 
       <div className="messages">
-        {iCreateTheGame && playable && (
-          <div className="message">
-            <p>
-              Game created! The ID is
-              <span className="game-details"> {gameId}</span>
-            </p>
-            <p>Give it to the other player so he can join the game.</p>
-          </div>
-        )}
+        {iCreateTheGame &&
+          playable &&
+          player2 === "0x0000000000000000000000000000000000000000" && (
+            <div className="message">
+              <p>
+                Game created! The ID is
+                <span className="game-details"> {gameId}</span>
+              </p>
+              <p>Give it to the other player so he can join the game.</p>
+            </div>
+          )}
         <div className="message">
           {playable && canMove
             ? "It's your turn"

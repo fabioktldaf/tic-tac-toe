@@ -24,6 +24,19 @@ const loadGameStatus = () => {
       };
 };
 
+const gameStatusUpdater = (() => {
+  let fnUpdater = null;
+  const setFnUpdater = (_fnUpdater) => (fnUpdater = _fnUpdater);
+
+  setInterval(async () => {
+    if (!!fnUpdater) await fnUpdater();
+  }, 5000);
+
+  return {
+    setFnUpdater,
+  };
+})();
+
 function App() {
   const [ticTacToeFacade, setTicTacToeFacade] = useState();
   const [gameStatus, setGameStatus] = useState(loadGameStatus());
@@ -31,7 +44,10 @@ function App() {
 
   const updateGameStatus = (updatedGame) => {
     window.localStorage.setItem(lsGameKey, JSON.stringify(updatedGame));
-    setGameStatus(updatedGame);
+    setGameStatus({
+      gameStatus,
+      ...updatedGame,
+    });
   };
 
   const handleAccountChanged = (newAccount) => {
@@ -98,6 +114,18 @@ function App() {
   };
 
   console.log("gameStatus ", gameStatus);
+
+  gameStatusUpdater.setFnUpdater(async () => {
+    if (ticTacToeFacade && gameStatus.gameId > 0) {
+      console.log("updating game ----- ", gameStatus);
+
+      const updatedGame = await ticTacToeFacade.getGame(gameStatus.gameId);
+      updateGameStatus({
+        ...gameStatus, // not overwrite "yourAccount"
+        ...updatedGame,
+      });
+    }
+  });
 
   return (
     <div className="app">

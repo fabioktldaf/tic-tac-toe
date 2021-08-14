@@ -110,5 +110,6 @@ export default async (
     makeMove,
     getGame,
     getCurrentAccount,
+    web3,
   };
 };
